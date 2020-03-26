@@ -32,6 +32,21 @@ def huwriczCriteria(dataSet, labelColumn, cautionFactor):
     return huwriczCriteriaValue
 
 
+def savageCriteria(dataSet, labelColumn):
+    minimumValuesInRows = dataSet.min(axis=1)
+    maximumValuesInRows = dataSet.max(axis=1)
+    minSavage = float('inf')
+    bestRow = 0
+    for i, (minValue, maxValue) in enumerate(zip(minimumValuesInRows, maximumValuesInRows)):
+        savageValueInRow = maxValue - minValue
+        if minSavage > savageValueInRow:
+            minSavage = savageValueInRow
+            bestRow = i
+
+    savageCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
+    print(minSavage)
+    return savageCriteriaValue
+
 print(json_config.dataSourceUrl)
 dataset = read_csv(json_config.dataSourceUrl)
 
@@ -41,3 +56,6 @@ print("-----------Kryterium Optymistyczne-----------")
 print(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
 print("-----------Kryterium Walda-----------")
 print(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+
+print("-----------Kryterium Savage'a-----------")
+print(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
