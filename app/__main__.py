@@ -1,5 +1,6 @@
 from pandas import read_csv
 from app.configuration.config import json_config
+import numpy as np
 
 
 def minMaxCriteria(dataSet, labelColumn):
@@ -30,25 +31,30 @@ def huwriczCriteria(dataSet, labelColumn, cautionFactor):
     huwriczCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
     return huwriczCriteriaValue
 
-def savageCriteria(dataSet, labelColumn):
-    minimumValuesInRows = dataSet.min(axis=1)
-    maximumValuesInRows = dataSet.max(axis=1)
-    minSavage = float('inf')
-    bestRow = 0
-    for i, (minValue, maxValue) in enumerate(zip(minimumValuesInRows, maximumValuesInRows)):
-        savageValueInRow = maxValue - minValue
-        if minSavage > savageValueInRow:
-            minSavage = savageValueInRow
-            bestRow = i
 
-    savageCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    print(minSavage)
-    return savageCriteriaValue
+def countRelativeLoses(i, maxInColumn, row):
+    return maxInColumn[i] - row[i]
+
+
+def savageCriteria(dataSet, labelColumn):
+    maxInColumn = np.delete(dataSet.max().values, 0)
+    dataArray = dataSet.loc[:, dataSet.columns != labelColumn].values
+    relativeLoses = map(countRelativeLoses, dataArray, maxInColumn)
+    lowestMax = dataArray.max()
+    lowestMaxIndex = 0
+    for rowIndex, row in enumerate(dataArray):
+        rowRelativeLoses = list(map(lambda i: countRelativeLoses(i[0], maxInColumn, row), enumerate(row)))
+        rowMax = max(rowRelativeLoses)
+        if rowMax < lowestMax:
+            lowestMax = rowMax
+            lowestMaxIndex = rowIndex
+
+    return dataSet.loc[lowestMaxIndex, dataSet.columns == labelColumn]
 
 def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
     bestRow = 0
     bestValue = 0
-    for rowIndex, row in enumerate(dataSet.loc[:,dataSet.columns != labelColumn].values):
+    for rowIndex, row in enumerate(dataSet.loc[:, dataSet.columns != labelColumn].values):
         rowValue = 0
         for i, probability in enumerate(probabilities):
             rowValue += row[i] * probability
