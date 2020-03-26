@@ -3,6 +3,7 @@
     "terminsiewu":{
         "dataSourceUrl": "./data/16.csv",
         "labelColumn": "TerminSiewu",
-        "cautionFactor": 0
+        "cautionFactor": 0.25,
+        "probabilities": [0.34, 0.33, 0.33]
     }
 }

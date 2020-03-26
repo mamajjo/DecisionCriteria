@@ -28,9 +28,7 @@ def huwriczCriteria(dataSet, labelColumn, cautionFactor):
             bestRow = i
 
     huwriczCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    print(maxHuwricz)
     return huwriczCriteriaValue
-
 
 def savageCriteria(dataSet, labelColumn):
     minimumValuesInRows = dataSet.min(axis=1)
@@ -47,6 +45,20 @@ def savageCriteria(dataSet, labelColumn):
     print(minSavage)
     return savageCriteriaValue
 
+def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
+    bestRow = 0
+    bestValue = 0
+    for rowIndex, row in enumerate(dataSet.loc[:,dataSet.columns != labelColumn].values):
+        rowValue = 0
+        for i, probability in enumerate(probabilities):
+            rowValue += row[i] * probability
+        if rowValue > bestValue:
+            bestValue = rowValue
+            bestRow = rowIndex
+    bayesLaplaceCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
+    return bayesLaplaceCriteriaValue
+
+
 print(json_config.dataSourceUrl)
 dataset = read_csv(json_config.dataSourceUrl)
 
@@ -56,6 +68,7 @@ print("-----------Kryterium Optymistyczne-----------")
 print(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
 print("-----------Kryterium Walda-----------")
 print(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-
+print("-----------Kryterium Bayesa-Laplace'a-----------")
+print(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=json_config.probabilities))
 print("-----------Kryterium Savage'a-----------")
 print(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
