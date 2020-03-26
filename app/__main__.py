@@ -31,19 +31,13 @@ def huwriczCriteria(dataSet, labelColumn, cautionFactor):
     huwriczCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
     return huwriczCriteriaValue
 
-
-def countRelativeLoses(i, maxInColumn, row):
-    return maxInColumn[i] - row[i]
-
-
 def savageCriteria(dataSet, labelColumn):
     maxInColumn = np.delete(dataSet.max().values, 0)
     dataArray = dataSet.loc[:, dataSet.columns != labelColumn].values
-    relativeLoses = map(countRelativeLoses, dataArray, maxInColumn)
     lowestMax = dataArray.max()
     lowestMaxIndex = 0
     for rowIndex, row in enumerate(dataArray):
-        rowRelativeLoses = list(map(lambda i: countRelativeLoses(i[0], maxInColumn, row), enumerate(row)))
+        rowRelativeLoses = list(map(lambda i: maxInColumn[i[0]] - row[i[0]], enumerate(row)))
         rowMax = max(rowRelativeLoses)
         if rowMax < lowestMax:
             lowestMax = rowMax
