@@ -1,6 +1,8 @@
 {
     "chosenDataSet":"terminsiewu",
     "terminsiewu":{
-        "dataSourceUrl": "./data/16.csv"
+        "dataSourceUrl": "./data/16.csv",
+        "labelColumn": "TerminSiewu",
+        "cautionFactor": 0
     }
 }
