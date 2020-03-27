@@ -59,16 +59,27 @@ def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
     return bayesLaplaceCriteriaValue
 
 
-print(json_config.dataSourceUrl)
 dataset = read_csv(json_config.dataSourceUrl)
+try:
+    if(dataset.shape[1] - 1  != len(json_config.probabilities)):
+        raise AttributeError('Number of probabilites mismatch number of valued colums')
+    if(json_config.cautionFactor < 0 or json_config.cautionFactor > 1):
+        raise AttributeError(f"Caution factor must be between 0 or 1 but is: {json_config.cautionFactor}")
+    print(json_config.cautionFactor)
+    print("-----------Kryterium Huwricza-----------")
+    print(huwriczCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, cautionFactor=json_config.cautionFactor))
+    print("-----------Kryterium Optymistyczne-----------")
+    print(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+    print("-----------Kryterium Walda-----------")
+    print(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+    print("-----------Kryterium Bayesa-Laplace'a-----------")
+    print(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=json_config.probabilities))
+    print("-----------Kryterium Savage'a-----------")
+    print(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+except AttributeError as error:
+    print('in configuration file: ' + repr(error))
+except KeyError as keyError:
+    print('in configuration file: ' + repr(keyError))
 
-print("-----------Kryterium Huwricza-----------")
-print(huwriczCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, cautionFactor=json_config.cautionFactor))
-print("-----------Kryterium Optymistyczne-----------")
-print(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-print("-----------Kryterium Walda-----------")
-print(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-print("-----------Kryterium Bayesa-Laplace'a-----------")
-print(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=json_config.probabilities))
-print("-----------Kryterium Savage'a-----------")
-print(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+
+
