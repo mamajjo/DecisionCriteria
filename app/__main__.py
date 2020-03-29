@@ -2,19 +2,18 @@ from pandas import read_csv
 from app.configuration.config import json_config
 import numpy as np
 
-
 def minMaxCriteria(dataSet, labelColumn):
     minimumValuesInRows = dataSet.min(axis=1)
     indexOfMaximumOfMinimum = minimumValuesInRows.idxmax()
     minMaxCriteriaValue = dataSet.loc[indexOfMaximumOfMinimum, dataSet.columns == labelColumn]
-    return minMaxCriteriaValue
+    return minMaxCriteriaValue.values
 
 
 def optimisticCriteria(dataSet, labelColumn):
     maximumValuesInRows = dataSet.max(axis=1)
     indexOfMaximum = maximumValuesInRows.idxmax()
     maxCriteriaValue = dataSet.loc[indexOfMaximum, dataSet.columns == labelColumn]
-    return maxCriteriaValue
+    return maxCriteriaValue.values
 
 
 def huwriczCriteria(dataSet, labelColumn, cautionFactor):
@@ -29,7 +28,7 @@ def huwriczCriteria(dataSet, labelColumn, cautionFactor):
             bestRow = i
 
     huwriczCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    return huwriczCriteriaValue
+    return huwriczCriteriaValue.values
 
 def savageCriteria(dataSet, labelColumn):
     maxInColumn = np.delete(dataSet.max().values, 0)
@@ -43,7 +42,7 @@ def savageCriteria(dataSet, labelColumn):
             lowestMax = rowMax
             lowestMaxIndex = rowIndex
 
-    return dataSet.loc[lowestMaxIndex, dataSet.columns == labelColumn]
+    return dataSet.loc[lowestMaxIndex, dataSet.columns == labelColumn].values
 
 def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
     bestRow = 0
@@ -56,8 +55,12 @@ def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
             bestValue = rowValue
             bestRow = rowIndex
     bayesLaplaceCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    return bayesLaplaceCriteriaValue
+    return bayesLaplaceCriteriaValue.values
 
+def printMsg(msg):
+    print(f"-----------{msg}-----------")
+def printRes(res):
+    print(f"{json_config.labelColumn}: {res[0]}")
 
 dataset = read_csv(json_config.dataSourceUrl)
 try:
@@ -65,21 +68,18 @@ try:
         raise AttributeError('Number of probabilites mismatch number of valued colums')
     if(json_config.cautionFactor < 0 or json_config.cautionFactor > 1):
         raise AttributeError(f"Caution factor must be between 0 or 1 but is: {json_config.cautionFactor}")
-    print(json_config.cautionFactor)
-    print("-----------Kryterium Huwricza-----------")
-    print(huwriczCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, cautionFactor=json_config.cautionFactor))
-    print("-----------Kryterium Optymistyczne-----------")
-    print(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-    print("-----------Kryterium Walda-----------")
-    print(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-    print("-----------Kryterium Bayesa-Laplace'a-----------")
-    print(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=json_config.probabilities))
-    print("-----------Kryterium Savage'a-----------")
-    print(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+    print(f"Caution factor: {json_config.cautionFactor}")
+    printMsg("Kryterium Huwricza")
+    printRes(huwriczCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, cautionFactor=json_config.cautionFactor))
+    printMsg("Kryterium Optymistyczne")
+    printRes(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+    printMsg("Kryterium Walda")
+    printRes(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
+    printMsg("Kryterium Bayesa-Laplace'a")
+    printRes(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=json_config.probabilities))
+    printMsg("Kryterium Savage'a")
+    printRes(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
 except AttributeError as error:
     print('in configuration file: ' + repr(error))
 except KeyError as keyError:
     print('in configuration file: ' + repr(keyError))
-
-
-
