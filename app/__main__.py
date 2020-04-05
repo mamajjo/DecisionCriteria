@@ -1,86 +1,84 @@
 from pandas import read_csv, DataFrame
 from app.configuration.config import json_config
 import numpy as np
+from numpy import all, any, delete, transpose
 import matplotlib.pyplot as pl
+from pymprog import *
 
-def minMaxCriteria(dataSet, labelColumn):
+def minMaxCriteria(dataSet):
+    # A
     minimumValuesInRows = dataSet.min(axis=1)
     indexOfMaximumOfMinimum = minimumValuesInRows.idxmax()
-    minMaxCriteriaValue = dataSet.loc[indexOfMaximumOfMinimum, dataSet.columns == labelColumn]
-    return minMaxCriteriaValue.values
 
-def optimisticCriteria(dataSet, labelColumn):
-    maximumValuesInRows = dataSet.max(axis=1)
-    indexOfMaximum = maximumValuesInRows.idxmax()
-    maxCriteriaValue = dataSet.loc[indexOfMaximum, dataSet.columns == labelColumn]
-    return maxCriteriaValue.values
+    # B
+    maximumValuesInRows = dataSet.max()
+    indexOfMinimumMaximum = maximumValuesInRows.idxmin()
 
-def huwriczCriteria(dataSet, labelColumn, cautionFactor):
-    minimumValuesInRows = dataSet.min(axis=1)
-    maximumValuesInRows = dataSet.max(axis=1)
-    maxHuwricz = 0
-    bestRow = 0
-    for i, (minValue, maxValue) in enumerate(zip(minimumValuesInRows, maximumValuesInRows)):
-        huwriczValueInRow = cautionFactor * minValue + (1 - cautionFactor) * maxValue
-        if maxHuwricz < huwriczValueInRow:
-            maxHuwricz = huwriczValueInRow
-            bestRow = i
+    gameValue = dataSet.iloc[indexOfMaximumOfMinimum, indexOfMinimumMaximum]
+    return gameValue, minimumValuesInRows.max() == maximumValuesInRows.min()
 
-    huwriczCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    return huwriczCriteriaValue.values
+def clearDominated(dataset):
+    data = dataset.values
+    # rows
+    for r in range(len(data)):
+        for r2 in range(r+1, len(data)):
+            diff = data[r] - data[r2]
+            if(not any(list(map(lambda x: x > 0, diff))) and any(list(map(lambda x: x < 0, diff)))):
+                data = delete(data, r, axis=0)
+            if(not any(list(map(lambda x: x < 0, diff))) and any(list(map(lambda x: x > 0, diff)))):
+                data = delete(data, r2, axis=0)
+    # columns
+    data = transpose(data)
+    for r in range(len(data)):
+        for r2 in range(r+1, len(data)):
+            diff = data[r2] - data[r]
+            if(not any(list(map(lambda x: x > 0, diff))) and any(list(map(lambda x: x < 0, diff)))):
+                data = delete(data, r, axis=0)
+            if(not any(list(map(lambda x: x < 0, diff))) and any(list(map(lambda x: x > 0, diff)))):
+                data = delete(data, r2, axis=0)
+    data = transpose(data)
+    return data
 
-def savageCriteria(dataSet, labelColumn):
-    maxInColumn = np.delete(dataSet.max().values, 0)
-    dataArray = dataSet.loc[:, dataSet.columns != labelColumn].values
-    lowestMax = dataArray.max()
-    lowestMaxIndex = 0
-    for rowIndex, row in enumerate(dataArray):
-        rowRelativeLoses = list(map(lambda i: maxInColumn[i[0]] - row[i[0]], enumerate(row)))
-        rowMax = max(rowRelativeLoses)
-        if rowMax < lowestMax:
-            lowestMax = rowMax
-            lowestMaxIndex = rowIndex
-
-    return dataSet.loc[lowestMaxIndex, dataSet.columns == labelColumn].values
-
-def bayesLaplaceCriteria(dataSet, labelColumn, probabilities):
-    bestRow = 0
-    bestValue = 0
-    for rowIndex, row in enumerate(dataSet.loc[:, dataSet.columns != labelColumn].values):
-        rowValue = 0
-        for i, probability in enumerate(probabilities):
-            rowValue += row[i] * probability
-        if rowValue > bestValue:
-            bestValue = rowValue
-            bestRow = rowIndex
-    bayesLaplaceCriteriaValue = dataSet.loc[bestRow, dataSet.columns == labelColumn]
-    return bayesLaplaceCriteriaValue.values
+def printMixedStrategy(dataset):
+    data = dataset.values
+    begin('game')
+    # gain of player 1, a free variable
+    v = var('gameValue', bounds=(None,None))
+    # mixed strategy of player 2
+    p = var('p', len(data[0])) 
+    # probability sums to 1
+    sum(p) == 1
+    # player 2 chooses p to minimize v
+    minimize(v) 
+    # player 1 chooses the better value 
+    inequalities = [v >= sum([p[i]*row[i] for i in range(len(row))]) for row in data]
+    solve()
+    print('Game value: %g'% v.primal)
+    print("Mixed Strategy for player A:")
+    print([f"A{i+1}: {x.dual}" for i,x in enumerate(inequalities)])
+    print("Mixed Strategy for player B:")
+    print([f"B{i+1}: {x.primal}" for i,x in enumerate(p)])
+    end()
 
 def printMsg(msg):
     print(f"-----------{msg}-----------")
 def printRes(res):
-    print(f"{json_config.labelColumn}: {res[0]}")
+    if (res[1] == True):
+        print(f"There is a saddle point with value: {res[0]}")
+    else:
+        print(f"There is no saddle point")
 
-dataset = read_csv(json_config.dataSourceUrl)
+dataset = read_csv(json_config.dataSourceUrl, header=None)
 try:
-    if(dataset.shape[1] - 1  != len(json_config.probabilities)):
-        raise AttributeError('Number of probabilites mismatch number of valued colums')
-    if(json_config.cautionFactor < 0 or json_config.cautionFactor > 1):
-        raise AttributeError(f"Caution factor must be between 0 or 1 but is: {json_config.cautionFactor}")
-    printMsg("Kryterium Optymistyczne")
-    printRes(optimisticCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-    printMsg("Kryterium Walda")
-    printRes(minMaxCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-    printMsg("Kryterium Savage'a")
-    printRes(savageCriteria(dataSet=dataset, labelColumn=json_config.labelColumn))
-    for probabilities in [[0.33, 0.33, 0.34], [0.10, 0.4, 0.5], [0.1, 0.1, 0.8]]:
-        printMsg("Kryterium Bayesa-Laplace'a")
-        print(f"Probabilites: {probabilities}")
-        printRes(bayesLaplaceCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, probabilities=probabilities))
-    results = np.asarray([(round(caution_factor, 2), huwriczCriteria(dataSet=dataset, labelColumn=json_config.labelColumn, cautionFactor=caution_factor)[0]) for caution_factor in np.arange(0.1, 1.01, 0.05)])
-    df = DataFrame(data=results, columns=["Caution factor", json_config.labelColumn])
-    df.plot.scatter(x="Caution factor", y=json_config.labelColumn)
-    pl.show()
+    if(len(dataset.index) < 0):
+        raise AttributeError(f"At least one row of data is required")
+    dataset = DataFrame(data=clearDominated(dataset))
+    printMsg("Wald's criterium")
+    waldSolution = minMaxCriteria(dataSet=dataset)
+    printRes(waldSolution)
+    if (waldSolution[1] != True):
+        printMixedStrategy(dataset)
+
 except AttributeError as error:
     print('in configuration file: ' + repr(error))
 except KeyError as keyError:
