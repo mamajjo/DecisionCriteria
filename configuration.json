@@ -1,6 +1,6 @@
 {
     "chosenDataSet":"terminsiewu",
     "terminsiewu":{
-        "dataSourceUrl": "./data/ex.csv"
+        "dataSourceUrl": "./data/11.csv"
     }
 }
