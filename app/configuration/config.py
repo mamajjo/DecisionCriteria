@@ -1,5 +1,4 @@
 from pathlib import Path
-from pandas import read_json
 import json
 class Config(object):
     def __init__(self, graphPath):
