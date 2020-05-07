@@ -1,6 +1,6 @@
 {
-    "chosenDataSet":"terminsiewu",
-    "terminsiewu":{
+    "chosenDataSet": "wariant",
+    "wariant": {
         "dataSourceUrl": "./data/11.csv"
     }
 }
