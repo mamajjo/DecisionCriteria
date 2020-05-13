@@ -1,68 +1,46 @@
 import numpy as np
-from app.configuration.config import configuration
-from collections import defaultdict
+INT_MAX = 999999
+def mindist(G, src, dst, visited, parent):
+    #Base Conditions
+    if src == dst:
+        return 0
+    visited[src] = True
+    min_dist = INT_MAX
+    for k in range(V):
+        if visited[k] == False and G[src][k]:
+            res = mindist(G, k, dst, visited, parent);
+            if res != INT_MAX:
+                if min_dist > G[src][k] + res:
+                    min_dist = G[src][k] + res;
+                    parent[k] = src;
+    visited[src] = False
+    return min_dist
 
+def printpath(parent, dst):
+    if parent[dst] == -1:
+        return;
+    printpath(parent, int(parent[dst]));
+    print(f"{int(parent[dst])} --> ", end='')
 
-class Graph:
-    def __init__(self, values=[]):
-        self.V = values
+V = 8
+G = [[ 0, 1, 2, 5, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 4, 11, 0, 0 ],
+    [ 0, 0, 0, 0, 9, 5, 16, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 2, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 18 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 13 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 2 ],
+    [0, 0, 0, 0, 0, 0, 0, 0 ]]
+                  
+visited = np.zeros(V)
+parent = np.zeros(V)
 
-    def shortestDist(self):
-        graph = self.V
-        global INF
-
-        # dist[i] is going to store shortest
-        # distance from node i to node N-1.
-        dist = [0] * N
-
-        dist[N - 1] = 0
-
-        # Calculating shortest path
-        # for rest of the nodes
-        for i in range(N - 2, -1, -1):
-
-            # Initialize distance from
-            # i to destination (N-1)
-            dist[i] = INF
-
-            # Check all nodes of next stages
-            # to find shortest distance from
-            # i to N-1.
-            for j in range(N):
-
-                # Reject if no edge exists
-                if graph[i][j] == INF:
-                    continue
-
-                # We apply recursive equation to
-                # distance to target through j.
-                # and compare with minimum
-                # distance so far.
-                dist[i] = min(dist[i],
-                              graph[i][j] + dist[j])
-
-        return dist[0]
-
-
-N = 9
-INF = 99
-
-# rawGraph = [[INF, 1, 2, 5, INF, INF, INF, INF],
-#             [INF, INF, INF, INF, 4, 11, INF, INF],
-#             [INF, INF, INF, INF, 9, 5, 16, INF],
-#             [INF, INF, INF, INF, INF, INF, 2, INF],
-#             [INF, INF, INF, INF, INF, INF, INF, 18],
-#             [INF, INF, INF, INF, INF, INF, INF, 13],
-#             [INF, INF, INF, INF, INF, INF, INF, 2]]
-
-rawGraph = np.loadtxt(configuration.graphPath, dtype='i', delimiter=' ')
-try:
-    if (len(rawGraph) < 0):
-        raise AttributeError(f"At least one row of data is required")
-    g = Graph(rawGraph)
-    # indexing from 0
-    print(g.shortestDist())
-except AttributeError as error:
-    print('in configuration file: ' + repr(error))
-except KeyError as keyError:
-    print('in configuration file: ' + repr(keyError))
+    
+for i in range(V):
+    visited[i] = False
+    parent[i] = -1
+    
+print(f" Min Distance from 0 to {V-1} : {mindist(G, 0, V-1, visited, parent)}")
+print(f"Path: ", end='')
+printpath(parent, 7)
+print(V-1, end='')
