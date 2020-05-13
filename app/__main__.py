@@ -1,41 +1,41 @@
 import numpy as np
 from app.configuration.config import configuration
 INT_MAX = 999999
-def mindist(G, src, dst, visited, parent):
+def mindist(GRAPH, source, dst, checked, parent):
     #Base Conditions
-    if src == dst:
+    if source == dst:
         return 0
-    visited[src] = True
+    checked[source] = True
     min_dist = INT_MAX
     for k in range(V):
-        if visited[k] == False and G[src][k]:
-            res = mindist(G, k, dst, visited, parent);
+        if checked[k] == False and GRAPH[source][k]:
+            res = mindist(GRAPH, k, dst, checked, parent)
             if res != INT_MAX:
-                if min_dist > G[src][k] + res:
-                    min_dist = G[src][k] + res;
-                    parent[k] = src;
-    visited[src] = False
+                if min_dist > GRAPH[source][k] + res:
+                    min_dist = GRAPH[source][k] + res
+                    parent[k] = source
+    checked[source] = False
     return min_dist
 
 def printpath(parent, dst):
     if parent[dst] == -1:
-        return;
-    printpath(parent, int(parent[dst]));
+        return
+    printpath(parent, int(parent[dst]))
     print(f"{int(parent[dst])} --> ", end='')
 
 rawGraph = np.loadtxt(configuration.graphPath, dtype='i', delimiter=' ')
 V = rawGraph.shape[0]
-visited = np.zeros(V)
+checked = np.zeros(V)
 parent = np.zeros(V)
 for i in range(V):
-    visited[i] = False
+    checked[i] = False
     parent[i] = -1
 print(V)
 try:
     if (len(rawGraph) < 0):
         raise AttributeError(f"At least one row of data is required")
     g = rawGraph
-    print(f" Min Distance from 0 to {V-1} : {mindist(g, 0, V-1, visited, parent)}")
+    print(f" Min Distance from 0 to {V-1} : {mindist(g, 0, V-1, checked, parent)}")
     print(f"Path: ", end='')
     printpath(parent, V-1)
     print(V-1, end='')
