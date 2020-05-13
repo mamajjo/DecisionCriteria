@@ -23,25 +23,21 @@ def printpath(parent, dst):
     printpath(parent, int(parent[dst]));
     print(f"{int(parent[dst])} --> ", end='')
 
-V = 8
-                  
+rawGraph = np.loadtxt(configuration.graphPath, dtype='i', delimiter=' ')
+V = rawGraph.shape[0]
 visited = np.zeros(V)
 parent = np.zeros(V)
-
-    
 for i in range(V):
     visited[i] = False
     parent[i] = -1
-
-rawGraph = np.loadtxt(configuration.graphPath, dtype='i', delimiter=' ')
-
+print(V)
 try:
     if (len(rawGraph) < 0):
         raise AttributeError(f"At least one row of data is required")
     g = rawGraph
     print(f" Min Distance from 0 to {V-1} : {mindist(g, 0, V-1, visited, parent)}")
     print(f"Path: ", end='')
-    printpath(parent, 7)
+    printpath(parent, V-1)
     print(V-1, end='')
 except AttributeError as error:
     print('in configuration file: ' + repr(error))
