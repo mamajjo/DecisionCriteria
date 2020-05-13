@@ -1,4 +1,5 @@
 import numpy as np
+from app.configuration.config import configuration
 INT_MAX = 999999
 def mindist(G, src, dst, visited, parent):
     #Base Conditions
@@ -23,14 +24,6 @@ def printpath(parent, dst):
     print(f"{int(parent[dst])} --> ", end='')
 
 V = 8
-G = [[ 0, 1, 2, 5, 0, 0, 0, 0 ],
-    [ 0, 0, 0, 0, 4, 11, 0, 0 ],
-    [ 0, 0, 0, 0, 9, 5, 16, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 2, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 18 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 13 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 2 ],
-    [0, 0, 0, 0, 0, 0, 0, 0 ]]
                   
 visited = np.zeros(V)
 parent = np.zeros(V)
@@ -39,8 +32,18 @@ parent = np.zeros(V)
 for i in range(V):
     visited[i] = False
     parent[i] = -1
-    
-print(f" Min Distance from 0 to {V-1} : {mindist(G, 0, V-1, visited, parent)}")
-print(f"Path: ", end='')
-printpath(parent, 7)
-print(V-1, end='')
+
+rawGraph = np.loadtxt(configuration.graphPath, dtype='i', delimiter=' ')
+
+try:
+    if (len(rawGraph) < 0):
+        raise AttributeError(f"At least one row of data is required")
+    g = rawGraph
+    print(f" Min Distance from 0 to {V-1} : {mindist(g, 0, V-1, visited, parent)}")
+    print(f"Path: ", end='')
+    printpath(parent, 7)
+    print(V-1, end='')
+except AttributeError as error:
+    print('in configuration file: ' + repr(error))
+except KeyError as keyError:
+    print('in configuration file: ' + repr(keyError))
