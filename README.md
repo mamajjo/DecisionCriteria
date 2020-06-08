@@ -9,4 +9,5 @@
 `pip freeze > requirements.txt`
 
 ## Run app
-`python -m app`
+Main of app module prints html, so best to redirect to file
+`python -m app > result_file.html`
